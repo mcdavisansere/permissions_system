@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Permissions System – IT Operator Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:       #2d6a4f;
+      --green-light: #d8f3dc;
+      --green-mid:   #52b788;
+      --red:         #c1121f;
+      --red-light:   #ffe0e0;
+      --yellow:      #e9c46a;
+      --yellow-light:#fff8e1;
+      --blue:        #1d3557;
+      --blue-light:  #e8f0fe;
+      --gray-50:     #f9fafb;
+      --gray-100:    #f3f4f6;
+      --gray-200:    #e5e7eb;
+      --gray-400:    #9ca3af;
+      --gray-600:    #4b5563;
+      --gray-800:    #1f2937;
+      --white:       #ffffff;
+      --shadow-sm:   0 1px 3px rgba(0,0,0,.08);
+      --shadow-md:   0 4px 12px rgba(0,0,0,.12);
+      --radius:      10px;
+      --font:        'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--gray-100);
+      color: var(--gray-800);
+      min-height: 100vh;
+    }
+
+    /* ── Top nav ── */
+    header {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-sm);
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: var(--green); display: grid; place-items: center;
+      color: #fff; font-size: 17px;
+    }
+    .logo-text { font-weight: 700; font-size: 16px; color: var(--gray-800); }
+    .logo-text span { color: var(--green); }
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--green); color: #fff;
+      display: grid; place-items: center; font-size: 13px; font-weight: 700;
+    }
+    .header-label { font-size: 13px; color: var(--gray-600); }
+
+    /* ── Layout ── */
+    main { max-width: 1280px; margin: 0 auto; padding: 28px 24px; }
+
+    /* ── Summary cards ── */
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 20px 22px; box-shadow: var(--shadow-sm);
+      border-left: 4px solid transparent;
+    }
+    .card.green  { border-color: var(--green-mid); }
+    .card.red    { border-color: var(--red); }
+    .card.yellow { border-color: var(--yellow); }
+    .card.blue   { border-color: #457b9d; }
+    .card-label  { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--gray-400); margin-bottom: 6px; }
+    .card-value  { font-size: 30px; font-weight: 800; line-height: 1; }
+    .card.green  .card-value { color: var(--green); }
+    .card.red    .card-value { color: var(--red); }
+    .card.yellow .card-value { color: #b7860e; }
+    .card.blue   .card-value { color: #457b9d; }
+    .card-sub    { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      background: var(--white); border-radius: var(--radius);
+      padding: 16px 20px; box-shadow: var(--shadow-sm);
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+      margin-bottom: 20px;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; }
+    .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--gray-400); }
+    .search-input {
+      width: 100%; padding: 8px 12px 8px 34px;
+      border: 1px solid var(--gray-200); border-radius: 7px;
+      font-size: 14px; outline: none; transition: border-color .2s;
+    }
+    .search-input:focus { border-color: var(--green-mid); }
+    select, .btn-filter {
+      padding: 8px 12px; border: 1px solid var(--gray-200);
+      border-radius: 7px; font-size: 13px; background: var(--white);
+      color: var(--gray-800); outline: none; cursor: pointer;
+    }
+    select:focus { border-color: var(--green-mid); }
+    .btn-primary {
+      padding: 8px 16px; background: var(--green); color: #fff;
+      border: none; border-radius: 7px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-primary:hover { background: var(--green-mid); }
+    .btn-secondary {
+      padding: 8px 14px; background: var(--white); color: var(--gray-600);
+      border: 1px solid var(--gray-200); border-radius: 7px; font-size: 13px;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-secondary:hover { border-color: var(--green-mid); color: var(--green); }
+
+    /* ── Request list ── */
+    .list-header {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1fr 100px;
+      padding: 10px 16px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--gray-400);
+    }
+    .request-list { display: flex; flex-direction: column; gap: 8px; }
+    .request-item {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow-sm); overflow: hidden;
+      transition: box-shadow .2s;
+    }
+    .request-item:hover { box-shadow: var(--shadow-md); }
+    .request-row {
+      display: grid;
+      grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1fr 100px;
+      align-items: center; padding: 14px 16px; cursor: pointer;
+    }
+    .requester { display: flex; align-items: center; gap: 10px; }
+    .req-avatar {
+      width: 32px; height: 32px; border-radius: 50%; font-size: 12px;
+      font-weight: 700; display: grid; place-items: center; flex-shrink: 0;
+    }
+    .req-name  { font-size: 14px; font-weight: 600; }
+    .req-role  { font-size: 11px; color: var(--gray-400); }
+    .cell      { font-size: 13px; color: var(--gray-600); }
+    .cell-soft { font-size: 13px; font-weight: 600; color: var(--gray-800); }
+
+    /* status tag */
+    .status-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 700;
+      cursor: pointer; position: relative; user-select: none;
+    }
+    .status-tag.approved  { background: var(--green-light); color: var(--green); }
+    .status-tag.pending   { background: var(--yellow-light); color: #7a5900; }
+    .status-tag.denied    { background: var(--red-light); color: var(--red); }
+    .status-tag.ai        { background: var(--blue-light); color: var(--blue); }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .approved .status-dot  { background: var(--green); }
+    .pending  .status-dot  { background: var(--yellow); }
+    .denied   .status-dot  { background: var(--red); }
+    .ai       .status-dot  { background: var(--blue); }
+
+    /* tooltip */
+    .tooltip {
+      position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      background: var(--gray-800); color: #fff; font-size: 11px; font-weight: 400;
+      padding: 8px 12px; border-radius: 7px; width: 220px; text-align: left;
+      pointer-events: none; opacity: 0; transition: opacity .2s; z-index: 200;
+      line-height: 1.5;
+    }
+    .tooltip::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 6px solid transparent; border-top-color: var(--gray-800);
+    }
+    .status-tag:hover .tooltip { opacity: 1; }
+
+    /* confidence bar */
+    .conf-wrap { display: flex; align-items: center; gap: 7px; }
+    .conf-bar  { flex: 1; height: 5px; background: var(--gray-200); border-radius: 3px; overflow: hidden; }
+    .conf-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+    .conf-num  { font-size: 11px; font-weight: 700; min-width: 30px; text-align: right; }
+
+    /* actions */
+    .actions { display: flex; gap: 6px; }
+    .act-btn {
+      width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--gray-200);
+      background: var(--white); cursor: pointer; display: grid; place-items: center;
+      font-size: 15px; transition: all .2s;
+    }
+    .act-btn:hover { border-color: var(--green-mid); background: var(--green-light); }
+    .act-btn.deny:hover { border-color: var(--red); background: var(--red-light); }
+
+    /* expand panel */
+    .expand-panel {
+      display: none; border-top: 1px solid var(--gray-200);
+      padding: 16px 20px; background: var(--gray-50);
+    }
+    .expand-panel.open { display: block; }
+    .expand-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .expand-section h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-400); margin-bottom: 8px; }
+    .expand-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+    .expand-key { color: var(--gray-600); }
+    .expand-val { font-weight: 600; }
+    .justification {
+      margin-top: 10px; padding: 10px 14px;
+      background: var(--white); border-radius: 7px;
+      border-left: 3px solid var(--green-mid);
+      font-size: 13px; color: var(--gray-600); line-height: 1.6;
+    }
+    .expand-actions { display: flex; gap: 10px; margin-top: 14px; }
+    .btn-approve {
+      padding: 7px 18px; background: var(--green); color: #fff;
+      border: none; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-approve:hover { background: var(--green-mid); }
+    .btn-deny {
+      padding: 7px 18px; background: var(--white); color: var(--red);
+      border: 1px solid var(--red); border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .btn-deny:hover { background: var(--red-light); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: grid; place-items: center; z-index: 300;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--white); border-radius: 14px;
+      padding: 28px; width: 460px; max-width: 95vw;
+      transform: translateY(12px); transition: transform .2s;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal h3 { font-size: 18px; margin-bottom: 6px; }
+    .modal p  { font-size: 13px; color: var(--gray-600); margin-bottom: 18px; line-height: 1.6; }
+    .modal label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; }
+    .modal textarea {
+      width: 100%; border: 1px solid var(--gray-200); border-radius: 7px;
+      padding: 10px 12px; font-size: 13px; resize: vertical; min-height: 90px;
+      font-family: var(--font); outline: none;
+    }
+    .modal textarea:focus { border-color: var(--green-mid); }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
+    .btn-cancel {
+      padding: 8px 18px; background: var(--gray-100); color: var(--gray-600);
+      border: none; border-radius: 7px; cursor: pointer; font-size: 13px;
+    }
+
+    /* ── Search software panel ── */
+    .soft-panel {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow-sm); padding: 20px 22px; margin-top: 20px;
+    }
+    .soft-panel h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--gray-800); }
+    .soft-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .soft-card {
+      border: 1px solid var(--gray-200); border-radius: 9px;
+      padding: 14px 16px; transition: box-shadow .2s;
+    }
+    .soft-card:hover { box-shadow: var(--shadow-md); border-color: var(--green-mid); }
+    .soft-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .soft-req  { font-size: 12px; color: var(--gray-400); margin-bottom: 8px; }
+    .soft-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .soft-tag  {
+      font-size: 11px; padding: 2px 8px; border-radius: 20px;
+      background: var(--green-light); color: var(--green); font-weight: 600;
+    }
+    .soft-tag.sensitive { background: var(--red-light); color: var(--red); }
+    .soft-tag.cost-high { background: var(--yellow-light); color: #7a5900; }
+
+    /* ── Toast ── */
+    .toast-wrap { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 500; }
+    .toast {
+      background: var(--gray-800); color: #fff;
+      padding: 12px 18px; border-radius: 10px; font-size: 13px;
+      box-shadow: var(--shadow-md); display: flex; align-items: center; gap: 10px;
+      animation: slideIn .3s ease;
+    }
+    .toast.success { border-left: 4px solid var(--green-mid); }
+    .toast.error   { border-left: 4px solid var(--red); }
+    .toast.info    { border-left: 4px solid #457b9d; }
+    @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 60px 20px; color: var(--gray-400); }
+    .empty-icon { font-size: 42px; margin-bottom: 12px; }
+    .empty p { font-size: 14px; }
+
+    /* responsive */
+    @media (max-width: 900px) {
+      .summary { grid-template-columns: repeat(2, 1fr); }
+      .list-header { display: none; }
+      .request-row { grid-template-columns: 1fr 1fr; row-gap: 8px; }
+      .expand-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🔐</div>
+    <div class="logo-text">Perm<span>Flow</span></div>
+  </div>
+  <div class="header-right">
+    <span class="header-label">IT Operator Dashboard</span>
+    <div class="avatar">JD</div>
+  </div>
+</header>
+
+<!-- ── Main ── -->
+<main>
+
+  <!-- Summary cards -->
+  <div class="summary" id="summaryCards"></div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" id="searchInput" type="text" placeholder="Search requests, software, roles…" />
+    </div>
+    <select id="filterStatus">
+      <option value="all">All Statuses</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+      <option value="ai">AI Approved</option>
+      <option value="denied">Denied</option>
+    </select>
+    <select id="filterDept">
+      <option value="all">All Departments</option>
+      <option value="Engineering">Engineering</option>
+      <option value="Marketing">Marketing</option>
+      <option value="Sales">Sales</option>
+      <option value="Finance">Finance</option>
+      <option value="Security">Security</option>
+    </select>
+    <button class="btn-secondary" id="toggleSoftware">📋 Software Catalog</button>
+    <button class="btn-primary" id="addRequestBtn">+ New Request</button>
+  </div>
+
+  <!-- List header -->
+  <div class="list-header">
+    <div>Requester</div>
+    <div>Software</div>
+    <div>Department</div>
+    <div>Sensitivity</div>
+    <div>Status</div>
+    <div>Confidence</div>
+    <div>Actions</div>
+  </div>
+
+  <!-- Request list -->
+  <div class="request-list" id="requestList"></div>
+
+  <!-- Software catalog panel -->
+  <div class="soft-panel" id="softPanel" style="display:none;">
+    <h3>📦 Software Catalog — Approval Requirements</h3>
+    <div class="soft-grid" id="softGrid"></div>
+  </div>
+
+</main>
+
+<!-- ── Deny modal ── -->
+<div class="modal-overlay" id="denyModal">
+  <div class="modal">
+    <h3>❌ Deny Request</h3>
+    <p>Please provide a reason for denying this request. The requester will be automatically notified.</p>
+    <label for="denyReason">Denial Reason</label>
+    <textarea id="denyReason" placeholder="e.g. Insufficient justification for admin-level access to a sensitive system…"></textarea>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="denyCancel">Cancel</button>
+      <button class="btn-deny" id="denyConfirm">Confirm Denial</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── New request modal ── -->
+<div class="modal-overlay" id="newModal">
+  <div class="modal">
+    <h3>➕ New Access Request</h3>
+    <p>Simulate a new software access request entering the pipeline.</p>
+    <label>Requester Name</label>
+    <input id="nrName" type="text" placeholder="Full name" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;margin-bottom:12px;outline:none;" />
+    <label>Role</label>
+    <input id="nrRole" type="text" placeholder="e.g. Senior Engineer" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;margin-bottom:12px;outline:none;" />
+    <label>Department</label>
+    <select id="nrDept" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;margin-bottom:12px;outline:none;">
+      <option>Engineering</option><option>Marketing</option><option>Sales</option><option>Finance</option><option>Security</option>
+    </select>
+    <label>Software Requested</label>
+    <select id="nrSoft" style="width:100%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;margin-bottom:12px;outline:none;">
+      <option>GitHub Copilot</option><option>Salesforce</option><option>Datadog</option><option>AWS Production</option><option>Okta Admin</option><option>Snyk</option><option>Slack</option><option>Figma</option>
+    </select>
+    <label>Justification</label>
+    <textarea id="nrJust" placeholder="Why do you need this access?" style="margin-bottom:0;"></textarea>
+    <div class="modal-footer">
+      <button class="btn-cancel" id="newCancel">Cancel</button>
+      <button class="btn-primary" id="newConfirm">Submit Request</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast container ── -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ────────────────────────────────────────────
+   DATA
+──────────────────────────────────────────── */
+const COLORS = ['#2d6a4f','#457b9d','#6a2d6a','#6a4f2d','#2d4f6a','#6a2d2d'];
+function avatarColor(name) { let h=0; for(let c of name) h=c.charCodeAt(0)+((h<<5)-h); return COLORS[Math.abs(h)%COLORS.length]; }
+function initials(name) { return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(); }
+
+const SOFTWARE_CATALOG = [
+  { name:'GitHub Copilot', sensitivity:'Low', cost:'Medium', roles:['Engineer','Senior Engineer'], tags:['auto-approved for Eng'] },
+  { name:'Salesforce',     sensitivity:'Medium', cost:'High', roles:['Sales Rep','Account Exec'], tags:['CRM', 'cost-high'] },
+  { name:'Datadog',        sensitivity:'Medium', cost:'High', roles:['Engineer','DevOps','SRE'], tags:['Monitoring'] },
+  { name:'AWS Production', sensitivity:'High', cost:'High',  roles:['DevOps','SRE','CTO'], tags:['sensitive','cost-high'] },
+  { name:'Okta Admin',     sensitivity:'High', cost:'Medium',roles:['IT Admin','Security Engineer'], tags:['sensitive'] },
+  { name:'Snyk',           sensitivity:'Low',  cost:'Medium',roles:['Engineer','Security Engineer'], tags:['DevSecOps'] },
+  { name:'Slack',          sensitivity:'Low',  cost:'Low',   roles:['All'], tags:['auto-approved all'] },
+  { name:'Figma',          sensitivity:'Low',  cost:'Medium',roles:['Designer','PM','Marketing'], tags:['Design'] },
+];
+
+let requests = [
+  { id:1,  name:'Aisha Patel',    role:'Senior Engineer',     dept:'Engineering', software:'GitHub Copilot',   access:'Standard',   sensitivity:'Low',    status:'approved', zone:'auto',  confidence:0.97, submitted:'2025-07-10', justification:'Need AI code completion for my daily development tasks on the ML inference service.', risk:0.08 },
+  { id:2,  name:'Carlos Mendez',  role:'Marketing Manager',   dept:'Marketing',   software:'AWS Production',   access:'Admin',      sensitivity:'High',   status:'pending',  zone:'hitl',  confidence:0.22, submitted:'2025-07-11', justification:'Need to deploy a new landing page directly to S3 production bucket.', risk:0.91 },
+  { id:3,  name:'Priya Nair',     role:'Sales Rep',           dept:'Sales',       software:'Salesforce',       access:'Standard',   sensitivity:'Medium', status:'approved', zone:'auto',  confidence:0.93, submitted:'2025-07-09', justification:'Required for managing customer pipeline and deal tracking.', risk:0.11 },
+  { id:4,  name:'Jordan Wu',      role:'DevOps Engineer',     dept:'Engineering', software:'Datadog',          access:'Viewer',     sensitivity:'Medium', status:'ai',       zone:'ai',    confidence:0.81, submitted:'2025-07-11', justification:'Need read access to monitor production metrics for the API gateway.', risk:0.19 },
+  { id:5,  name:'Maya Osei',      role:'Finance Analyst',     dept:'Finance',     software:'Okta Admin',       access:'Admin',      sensitivity:'High',   status:'pending',  zone:'hitl',  confidence:0.31, submitted:'2025-07-12', justification:'Temporary access needed to help IT during staff onboarding surge.', risk:0.84 },
+  { id:6,  name:'Sam Rivera',     role:'Security Engineer',   dept:'Security',    software:'Snyk',             access:'Standard',   sensitivity:'Low',    status:'approved', zone:'auto',  confidence:0.95, submitted:'2025-07-08', justification:'Ongoing vulnerability scanning for all company repos.', risk:0.05 },
+  { id:7,  name:'Lena Kovacs',    role:'Designer',            dept:'Marketing',   software:'Figma',            access:'Editor',     sensitivity:'Low',    status:'approved', zone:'auto',  confidence:0.99, submitted:'2025-07-07', justification:'Design tool for all product UI/UX work.', risk:0.02 },
+  { id:8,  name:'Rahul Singh',    role:'IT Admin',            dept:'Engineering', software:'Okta Admin',       access:'Admin',      sensitivity:'High',   status:'ai',       zone:'ai',    confidence:0.77, submitted:'2025-07-10', justification:'Managing employee identity provisioning workflows.', risk:0.23 },
+  { id:9,  name:'Claire Dupont',  role:'Account Executive',   dept:'Sales',       software:'Salesforce',       access:'Standard',   sensitivity:'Medium', status:'approved', zone:'auto',  confidence:0.96, submitted:'2025-07-06', justification:'Primary CRM tool for enterprise deal management.', risk:0.07 },
+  { id:10, name:'Omar Hassan',    role:'Backend Engineer',    dept:'Engineering', software:'AWS Production',   access:'Viewer',     sensitivity:'High',   status:'ai',       zone:'ai',    confidence:0.74, submitted:'2025-07-11', justification:'Read-only access to production logs for debugging service latency issues.', risk:0.28 },
+  { id:11, name:'Tasha Williams', role:'Marketing Analyst',   dept:'Marketing',   software:'Datadog',          access:'Viewer',     sensitivity:'Medium', status:'denied',   zone:'denied',confidence:0.38, submitted:'2025-07-09', justification:'Track marketing campaign server response times.', risk:0.72, denialReason:'Role does not typically require infrastructure monitoring access. Please coordinate with DevOps team.' },
+  { id:12, name:'Felix Brandt',   role:'SRE',                 dept:'Engineering', software:'AWS Production',   access:'Admin',      sensitivity:'High',   status:'pending',  zone:'hitl',  confidence:0.41, submitted:'2025-07-12', justification:'On-call rotation requires full admin access to respond to production incidents.', risk:0.61 },
+];
+
+let pendingDenyId = null;
+let openRowId = null;
+
+/* ────────────────────────────────────────────
+   UTILS
+──────────────────────────────────────────── */
+function toast(msg, type='info') {
+  const w = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icon = type==='success'?'✅':type==='error'?'❌':'ℹ️';
+  t.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  w.appendChild(t);
+  setTimeout(()=>t.remove(), 3500);
+}
+
+function statusLabel(s) {
+  return { approved:'Approved', pending:'Pending', denied:'Denied', ai:'AI Approved' }[s] || s;
+}
+
+function tooltipText(r) {
+  if(r.status==='approved' && r.zone==='auto')
+    return `Auto-approved via rule-based filter. Role/department match for ${r.software}. No human review needed.`;
+  if(r.status==='ai')
+    return `AI model approved. Confidence: ${Math.round(r.confidence*100)}%. Risk score: ${Math.round(r.risk*100)}% (low). Semantic cluster match confirmed.`;
+  if(r.status==='pending')
+    return `Awaiting manual review. Risk score: ${Math.round(r.risk*100)}% — flagged as high-risk or low-confidence. Human-in-the-loop required.`;
+  if(r.status==='denied')
+    return `Denied. ${r.denialReason||'Access did not meet approval criteria.'}`;
+  return '';
+}
+
+function confColor(c) {
+  if(c>=0.75) return '#2d6a4f';
+  if(c>=0.5)  return '#e9c46a';
+  return '#c1121f';
+}
+
+function sensitivityColor(s) {
+  if(s==='High')   return '#c1121f';
+  if(s==='Medium') return '#e9c46a';
+  return '#2d6a4f';
+}
+
+/* ────────────────────────────────────────────
+   SUMMARY CARDS
+──────────────────────────────────────────── */
+function renderSummary() {
+  const total    = requests.length;
+  const autoApp  = requests.filter(r=>r.status==='approved').length;
+  const aiApp    = requests.filter(r=>r.status==='ai').length;
+  const pending  = requests.filter(r=>r.status==='pending').length;
+  const denied   = requests.filter(r=>r.status==='denied').length;
+  const autoRate = Math.round(((autoApp+aiApp)/total)*100);
+
+  document.getElementById('summaryCards').innerHTML = `
+    <div class="card green">
+      <div class="card-label">Auto-Approved</div>
+      <div class="card-value">${autoApp}</div>
+      <div class="card-sub">Rule-based (Origins + Contextual)</div>
+    </div>
+    <div class="card blue">
+      <div class="card-label">AI Approved</div>
+      <div class="card-value">${aiApp}</div>
+      <div class="card-sub">Low risk + high confidence</div>
+    </div>
+    <div class="card yellow">
+      <div class="card-label">Pending (HITL)</div>
+      <div class="card-value">${pending}</div>
+      <div class="card-sub">Requires manual review</div>
+    </div>
+    <div class="card red">
+      <div class="card-label">Automation Rate</div>
+      <div class="card-value">${autoRate}%</div>
+      <div class="card-sub">${denied} denied · ${total} total requests</div>
+    </div>
+  `;
+}
+
+/* ────────────────────────────────────────────
+   REQUEST LIST
+──────────────────────────────────────────── */
+function filteredRequests() {
+  const q    = document.getElementById('searchInput').value.toLowerCase();
+  const st   = document.getElementById('filterStatus').value;
+  const dept = document.getElementById('filterDept').value;
+  return requests.filter(r=>{
+    const matchQ = !q ||
+      r.name.toLowerCase().includes(q) ||
+      r.software.toLowerCase().includes(q) ||
+      r.role.toLowerCase().includes(q) ||
+      r.dept.toLowerCase().includes(q);
+    const matchS = st==='all' || r.status===st;
+    const matchD = dept==='all' || r.dept===dept;
+    return matchQ && matchS && matchD;
+  });
+}
+
+function renderList() {
+  const list = document.getElementById('requestList');
+  const items = filteredRequests();
+  if(!items.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><p>No requests match your filters.</p></div>`;
+    return;
+  }
+  list.innerHTML = items.map(r=>renderItem(r)).join('');
+
+  // Bind expand toggle
+  list.querySelectorAll('.request-row').forEach(row=>{
+    row.addEventListener('click', e=>{
+      if(e.target.closest('.actions,.status-tag')) return;
+      const id = +row.dataset.id;
+      const panel = document.getElementById(`panel-${id}`);
+      if(openRowId===id) {
+        panel.classList.remove('open');
+        openRowId=null;
+      } else {
+        if(openRowId) {
+          const prev=document.getElementById(`panel-${openRowId}`);
+          if(prev) prev.classList.remove('open');
+        }
+        panel.classList.add('open');
+        openRowId=id;
+      }
+    });
+  });
+
+  // Approve / deny buttons in actions column
+  list.querySelectorAll('.act-approve').forEach(btn=>{
+    btn.addEventListener('click', e=>{ e.stopPropagation(); approveRequest(+btn.dataset.id); });
+  });
+  list.querySelectorAll('.act-deny').forEach(btn=>{
+    btn.addEventListener('click', e=>{ e.stopPropagation(); openDenyModal(+btn.dataset.id); });
+  });
+
+  // Expand panel approve / deny
+  list.querySelectorAll('.exp-approve').forEach(btn=>{
+    btn.addEventListener('click', ()=>approveRequest(+btn.dataset.id));
+  });
+  list.querySelectorAll('.exp-deny').forEach(btn=>{
+    btn.addEventListener('click', ()=>openDenyModal(+btn.dataset.id));
+  });
+}
+
+function renderItem(r) {
+  const isPending = r.status==='pending';
+  const confPct   = Math.round(r.confidence*100);
+  const riskPct   = Math.round(r.risk*100);
+
+  return `
+  <div class="request-item" id="item-${r.id}">
+    <div class="request-row" data-id="${r.id}">
+      <!-- Requester -->
+      <div class="requester">
+        <div class="req-avatar" style="background:${avatarColor(r.name)};color:#fff">${initials(r.name)}</div>
+        <div>
+          <div class="req-name">${r.name}</div>
+          <div class="req-role">${r.role}</div>
+        </div>
+      </div>
+      <!-- Software -->
+      <div class="cell-soft">${r.software} <span style="font-size:11px;font-weight:400;color:var(--gray-400);">(${r.access})</span></div>
+      <!-- Dept -->
+      <div class="cell">${r.dept}</div>
+      <!-- Sensitivity -->
+      <div class="cell">
+        <span style="font-size:12px;font-weight:700;color:${sensitivityColor(r.sensitivity)}">${r.sensitivity}</span>
+      </div>
+      <!-- Status tag -->
+      <div>
+        <div class="status-tag ${r.status}">
+          <span class="status-dot"></span>
+          ${statusLabel(r.status)}
+          <div class="tooltip">${tooltipText(r)}</div>
+        </div>
+      </div>
+      <!-- Confidence -->
+      <div>
+        <div class="conf-wrap">
+          <div class="conf-bar">
+            <div class="conf-fill" style="width:${confPct}%;background:${confColor(r.confidence)}"></div>
+          </div>
+          <div class="conf-num" style="color:${confColor(r.confidence)}">${confPct}%</div>
+        </div>
+      </div>
+      <!-- Actions -->
+      <div class="actions">
+        ${isPending ? `
+          <button class="act-btn act-approve" data-id="${r.id}" title="Approve">✅</button>
+          <button class="act-btn deny act-deny" data-id="${r.id}" title="Deny">❌</button>
+        ` : `<span style="font-size:12px;color:var(--gray-400);">—</span>`}
+      </div>
+    </div>
+
+    <!-- Expand Panel -->
+    <div class="expand-panel ${openRowId===r.id?'open':''}" id="panel-${r.id}">
+      <div class="expand-grid">
+        <div class="expand-section">
+          <h4>Request Details</h4>
+          <div class="expand-row"><span class="expand-key">Submitted</span><span class="expand-val">${r.submitted}</span></div>
+          <div class="expand-row"><span class="expand-key">Software</span><span class="expand-val">${r.software}</span></div>
+          <div class="expand-row"><span class="expand-key">Access Level</span><span class="expand-val">${r.access}</span></div>
+          <div class="expand-row"><span class="expand-key">Sensitivity</span><span class="expand-val" style="color:${sensitivityColor(r.sensitivity)}">${r.sensitivity}</span></div>
+        </div>
+        <div class="expand-section">
+          <h4>AI Analysis</h4>
+          <div class="expand-row"><span class="expand-key">Risk Score</span><span class="expand-val" style="color:${confColor(1-r.risk)}">${riskPct}%</span></div>
+          <div class="expand-row"><span class="expand-key">Confidence</span><span class="expand-val" style="color:${confColor(r.confidence)}">${confPct}%</span></div>
+          <div class="expand-row"><span class="expand-key">Pipeline Zone</span><span class="expand-val">${{auto:'🟢 Auto-Approve',ai:'🔵 AI Approval',hitl:'🟡 Human Review',denied:'🔴 Denied'}[r.zone]||r.zone}</span></div>
+          <div class="expand-row"><span class="expand-key">Anomaly</span><span class="expand-val">${r.risk>0.6?'⚠️ Detected':'✅ None'}</span></div>
+        </div>
+        <div class="expand-section">
+          <h4>Requester</h4>
+          <div class="expand-row"><span class="expand-key">Name</span><span class="expand-val">${r.name}</span></div>
+          <div class="expand-row"><span class="expand-key">Role</span><span class="expand-val">${r.role}</span></div>
+          <div class="expand-row"><span class="expand-key">Department</span><span class="expand-val">${r.dept}</span></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <div class="expand-section"><h4>Justification</h4></div>
+        <div class="justification">${r.justification}</div>
+        ${r.denialReason?`<div class="justification" style="border-left-color:var(--red);margin-top:8px;"><strong>Denial Reason:</strong> ${r.denialReason}</div>`:''}
+      </div>
+      ${isPending ? `
+      <div class="expand-actions">
+        <button class="btn-approve exp-approve" data-id="${r.id}">✅ Approve Request</button>
+        <button class="btn-deny exp-deny" data-id="${r.id}">❌ Deny Request</button>
+      </div>` : ''}
+    </div>
+  </div>`;
+}
+
+/* ────────────────────────────────────────────
+   ACTIONS
+──────────────────────────────────────────── */
+function approveRequest(id) {
+  const r = requests.find(x=>x.id===id);
+  if(!r) return;
+  r.status='approved'; r.zone='auto'; r.confidence=0.99; r.risk=0.01;
+  openRowId=null;
+  renderSummary(); renderList();
+  toast(`✅ ${r.name}'s request for ${r.software} approved.`, 'success');
+  scheduleExpiry(r);
+}
+
+function scheduleExpiry(r) {
+  setTimeout(()=>{
+    toast(`⏰ Access expiry notice sent to ${r.name} for ${r.software}.`, 'info');
+  }, 6000);
+}
+
+function openDenyModal(id) {
+  pendingDenyId = id;
+  document.getElementById('denyReason').value='';
+  document.getElementById('denyModal').classList.add('open');
+}
+
+function closeDenyModal() {
+  document.getElementById('denyModal').classList.remove('open');
+  pendingDenyId=null;
+}
+
+document.getElementById('denyCancel').addEventListener('click', closeDenyModal);
+document.getElementById('denyConfirm').addEventListener('click', ()=>{
+  const reason = document.getElementById('denyReason').value.trim();
+  if(!reason) { toast('Please enter a denial reason.','error'); return; }
+  const r = requests.find(x=>x.id===pendingDenyId);
+  if(r) {
+    r.status='denied'; r.zone='denied'; r.denialReason=reason;
+    openRowId=null;
+    renderSummary(); renderList();
+    toast(`Request for ${r.software} by ${r.name} denied. Notification sent.`,'error');
+  }
+  closeDenyModal();
+});
+
+/* ── New request modal ── */
+document.getElementById('addRequestBtn').addEventListener('click',()=>{
+  document.getElementById('newModal').classList.add('open');
+});
+document.getElementById('newCancel').addEventListener('click',()=>{
+  document.getElementById('newModal').classList.remove('open');
+});
+document.getElementById('newConfirm').addEventListener('click',()=>{
+  const name = document.getElementById('nrName').value.trim();
+  const role = document.getElementById('nrRole').value.trim();
+  const dept = document.getElementById('nrDept').value;
+  const soft = document.getElementById('nrSoft').value;
+  const just = document.getElementById('nrJust').value.trim();
+  if(!name||!role||!just){ toast('Please fill in all fields.','error'); return; }
+
+  // Simple auto-classify logic
+  const isHighSens = ['AWS Production','Okta Admin'].includes(soft);
+  const isMismatch = (dept==='Marketing'||dept==='Finance') && isHighSens;
+  const conf = isMismatch ? 0.25+Math.random()*0.2 : 0.7+Math.random()*0.25;
+  const risk = isMismatch ? 0.7+Math.random()*0.2 : 0.05+Math.random()*0.2;
+  let status='pending', zone='hitl';
+  if(!isMismatch && conf>0.65) { status='ai'; zone='ai'; }
+
+  const newReq = {
+    id: Date.now(), name, role, dept, software:soft,
+    access:'Standard', sensitivity: isHighSens?'High':'Low',
+    status, zone, confidence:Math.min(conf,0.99), risk:Math.min(risk,0.99),
+    submitted:new Date().toISOString().slice(0,10),
+    justification:just
+  };
+  requests.unshift(newReq);
+  renderSummary(); renderList();
+  document.getElementById('newModal').classList.remove('open');
+  toast(`New request from ${name} for ${soft} submitted → ${statusLabel(status)}.`, status==='pending'?'info':'success');
+});
+
+/* ── Close modals on overlay click ── */
+document.getElementById('denyModal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeDenyModal(); });
+document.getElementById('newModal').addEventListener('click',e=>{ if(e.target===e.currentTarget) document.getElementById('newModal').classList.remove('open'); });
+
+/* ────────────────────────────────────────────
+   FILTERS / SEARCH
+──────────────────────────────────────────── */
+document.getElementById('searchInput').addEventListener('input', renderList);
+document.getElementById('filterStatus').addEventListener('change', renderList);
+document.getElementById('filterDept').addEventListener('change', renderList);
+
+/* ────────────────────────────────────────────
+   SOFTWARE CATALOG
+──────────────────────────────────────────── */
+document.getElementById('toggleSoftware').addEventListener('click',()=>{
+  const p=document.getElementById('softPanel');
+  p.style.display = p.style.display==='none' ? 'block':'none';
+});
+
+function renderSoftware() {
+  document.getElementById('softGrid').innerHTML = SOFTWARE_CATALOG.map(s=>{
+    const tags = s.tags.map(t=>{
+      const cls = t==='sensitive'?'sensitive':t==='cost-high'?'cost-high':'';
+      return `<span class="soft-tag ${cls}">${t}</span>`;
+    }).join('');
+    return `
+    <div class="soft-card">
+      <div class="soft-name">${s.name}</div>
+      <div class="soft-req">Sensitivity: <strong style="color:${sensitivityColor(s.sensitivity)}">${s.sensitivity}</strong> &nbsp;|&nbsp; Cost: ${s.cost}</div>
+      <div class="soft-req">Eligible roles: ${s.roles.join(', ')}</div>
+      <div class="soft-tags">${tags}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ────────────────────────────────────────────
+   AUTOMATED EXPIRY NOTICES (demo)
+──────────────────────────────────────────── */
+setTimeout(()=>{
+  toast('⏰ Access for Aisha Patel (GitHub Copilot) expires in 7 days. Re-approval required.','info');
+},4000);
+setTimeout(()=>{
+  toast('⏰ Access for Priya Nair (Salesforce) expires in 3 days. Re-approval required.','info');
+},9000);
+
+/* ────────────────────────────────────────────
+   INIT
+──────────────────────────────────────────── */
+renderSummary();
+renderList();
+renderSoftware();
+</script>
+</body>
+</html>
